@@ -1,0 +1,23 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+Found {{ books.size }} results.
+<table>
+    <thead>
+        <tr>
+            <td>UID</td>
+            <td>Title</td>
+            <td>Author</td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+            <tr>
+                <td>{{ book.id }}</td>
+                <td><a href="/book/{{ book.id }}">{{ book.title }}</a></td>
+                <td>{{ book.author }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

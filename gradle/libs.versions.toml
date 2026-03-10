@@ -1,0 +1,15 @@
+[versions]
+javalin = "6.7.0"
+pebble = "4.1.0"
+typesafe-config = "1.4.5"
+sqlite = "3.51.1.0"
+slf4j = "2.0.17"
+logback = "1.5.24"
+
+[libraries]
+javalin = { module = "io.javalin:javalin", version.ref = "javalin" }
+pebble = { module = "io.pebbletemplates:pebble", version.ref = "pebble" }
+config = { module = "com.typesafe:config", version.ref = "typesafe-config" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

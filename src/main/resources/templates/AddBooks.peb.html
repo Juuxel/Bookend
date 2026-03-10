@@ -1,0 +1,24 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+<form action="/api/insert" method="POST">
+    <label for="title-input">Title</label> <input type="text" name="title" id="title-input" required>
+    <label for="author-input">Author</label> <input type="text" name="author" id="author-input">
+    <label for="url-input">URL</label> <input type="text" name="url" id="url-input">
+    <label for="barcode-input">Barcode</label> <input type="text" name="barcode" id="barcode-input"
+        style="display: none">
+    <scannable-text-box onscan="(value) => document.getElementById('barcode-input').value = value"></scannable-text-box>
+    <button>Add</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function addBook(code) {
+        const li = document.createElement("li");
+        li.textContent = code;
+        document.getElementById("added").appendChild(li);
+        document.getElementById("add-box").clear();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+.gradle/
+build/
+
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+.vscode/
+
+node_modules/
+
+*.db
+*.log

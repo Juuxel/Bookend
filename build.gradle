@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.github.juuxel'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.javalin
+    implementation libs.pebble
+    implementation libs.config
+    implementation libs.sqlite
+    implementation libs.slf4j
+    implementation("org.jspecify:jspecify:1.0.0") // todo: catalog
+    runtimeOnly libs.logback
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
+
+tasks.register('compileTypescript', Exec) {
+    commandLine 'cmd', '/C', 'npx rollup -c'
+    inputs.dir 'src/main/typescript'
+    inputs.files('package.json', 'package-lock.json', 'rollup.config.js', 'tsconfig.json')
+    outputs.file 'build/script.js'
+}
+
+tasks.named('processResources', ProcessResources) {
+    dependsOn 'compileTypescript'
+    from('build/script.js') {
+        into 'static'
+    }
+}

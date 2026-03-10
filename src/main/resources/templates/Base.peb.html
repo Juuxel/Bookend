@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>{% block title %}Title{% endblock %}
+    </title>
+</head>
+
+<body>
+
+    {% block navbar %}
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/add">Add</a>
+    </nav>
+    {% endblock %}
+
+    {% block content %}
+    <h1>Hello, world!</h1>
+    {% endblock %}
+
+    <template id="scannable-text-box-template">
+        <span class="text-field-container" id="main">
+            <input type="text" id="text-box">
+            <button id="camera-button" class="text-field-button" type="button">📷</button>
+        </span>
+    </template>
+
+    <template id="scanner-template">
+        <video id="preview-video" width="400"></video>
+        <p>
+            <label for="device-select">Select input device:</label>
+            <select id="device-select">
+            </select>
+        </p>
+        <p>close button</p>
+    </template>
+
+    <script type="module">
+        import { ScannableTextBoxElement, ScannerElement, addStyleSheet } from '/static/script.js';
+        import styleSheet from "/static/style.css" with { type: "css" };
+
+        addStyleSheet(styleSheet);
+        customElements.define('scannable-text-box', ScannableTextBoxElement);
+        customElements.define('code-scanner', ScannerElement);
+    </script>
+
+    {% block scripts %}
+    {% endblock %}
+</body>
+
+</html>

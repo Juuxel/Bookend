@@ -1,0 +1,24 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+<table>
+    <tbody>
+        <tr>
+            <td>Title</td>
+            <td>{{ book.title }}</td>
+        </tr>
+        <tr>
+            <td>Author</td>
+            <td>{{ book.author }}</td>
+        </tr>
+        <tr>
+            <td>URL</td>
+            <td>{{ book.url }}</td>
+        </tr>
+        <tr>
+            <td>Barcode</td>
+            <td>{{ book.barcode }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
