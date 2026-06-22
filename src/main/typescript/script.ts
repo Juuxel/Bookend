@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { BrowserCodeReader, BrowserMultiFormatReader } from '@zxing/browser';
+import { BarcodeDetectorPolyfill } from '@undecaf/barcode-detector-polyfill';
 
 const styles: CSSStyleSheet[] = [];
 
@@ -56,7 +56,6 @@ export class ScannableTextBoxElement extends HTMLElement {
 export class ScannerElement extends HTMLElement {
     field: HTMLInputElement | undefined;
     private video: HTMLVideoElement | undefined;
-    private currentDevice: string | undefined;
     onscan: ((_: string) => void) | undefined;
 
     constructor() {
@@ -77,29 +76,29 @@ export class ScannerElement extends HTMLElement {
         }
 
         this.video = shadowRoot.getElementById("preview-video") as HTMLVideoElement;
-        const deviceSelect = shadowRoot.getElementById("device-select") as HTMLSelectElement;
-
-        addDevicesTo(deviceSelect)
-            .then(({ defaultDevice }) => {
-                this.currentDevice = defaultDevice;
-            });
-
-        deviceSelect.onchange = () => {
-            this.currentDevice = deviceSelect.value;
-            this.scan();
-        };
     }
 
     scan() {
         if (this.classList.contains("visible")) {
-            scanToField(this.field!, this.currentDevice, this.video!, this.onscan)
+            navigator.mediaDevices
+                .getUserMedia({ audio: false, video: { facingMode: "environment" } })
+                .then((stream) => {
+                    this.video!.srcObject = stream;
+                    return scanToField(this.field!, this.video!, this.onscan);
+                })
                 .then(() => this.hide());
         }
     }
 
     hide() {
         this.classList.remove("visible");
-        BrowserCodeReader.releaseAllStreams();
+
+        const videoSrc = this.video!.srcObject;
+        if (videoSrc instanceof MediaStream) {
+            for (const track of videoSrc.getTracks()) {
+                track.stop();
+            }
+        }
     }
 
     clear() {
@@ -109,24 +108,12 @@ export class ScannerElement extends HTMLElement {
     }
 }
 
-async function scanToField(field: HTMLInputElement, deviceId: string | undefined, preview: HTMLVideoElement, callback: ((_: string) => void) | undefined) {
-    const codeReader = new BrowserMultiFormatReader();
-    const result = await codeReader.decodeOnceFromVideoDevice(deviceId, preview);
-    field.value += result.getText();
+async function scanToField(field: HTMLInputElement, source: HTMLVideoElement, callback: ((_: string) => void) | undefined) {
+    const detector = new BarcodeDetectorPolyfill();
+    const result = await detector.detect(source);
+    const resultValue = result[0].rawValue;
+    field.value += resultValue;
     if (callback) {
-        callback(result.getText());
+        callback(resultValue);
     }
-}
-
-async function addDevicesTo(select: HTMLSelectElement): Promise<{ defaultDevice: string | undefined }> {
-    const devices = await BrowserCodeReader.listVideoInputDevices();
-
-    for (const dev of devices) {
-        const optionElement = document.createElement("option");
-        optionElement.value = dev.deviceId;
-        optionElement.textContent = dev.label;
-        select.appendChild(optionElement);
-    }
-
-    return { defaultDevice: devices[0].deviceId };
 }
