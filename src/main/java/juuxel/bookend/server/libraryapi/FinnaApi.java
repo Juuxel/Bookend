@@ -16,7 +16,7 @@ public final class FinnaApi implements LibraryApi {
     private static final String API_BASE_URL = "https://api.finna.fi/api/v1";
     private static final String SEARCH_API_URL = API_BASE_URL + "/search?lookfor=%s";
     private static final String FINNA_BASE_URL = "https://finna.fi";
-    private static final String COVER_URL = FINNA_BASE_URL + "/Cover/Show?source=Solr&size=large&recordid=%s";
+    private static final String COVER_URL = FINNA_BASE_URL + "/Cover/Show?source=Solr&size=large&recordid=%s&invisbn=%s";
     private static final String NAMESPACE = "finna";
 
     private final Gson gson = new Gson();
@@ -47,7 +47,7 @@ public final class FinnaApi implements LibraryApi {
         var recordId = doc.getAsJsonPrimitive("id").getAsString();
         var url = "https://finna.fi/Record/" + recordId;
         var images = doc.getAsJsonArray("images");
-        var coverUrl = !images.isEmpty() ? FINNA_BASE_URL + images.get(0).getAsJsonPrimitive().getAsString() : COVER_URL.formatted(recordId);
+        var coverUrl = !images.isEmpty() ? FINNA_BASE_URL + images.get(0).getAsJsonPrimitive().getAsString() : COVER_URL.formatted(recordId, barcode);
         return new LibraryRecord(title, authors, url, coverUrl);
     }
 
