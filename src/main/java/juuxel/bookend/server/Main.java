@@ -80,11 +80,20 @@ public final class Main {
                     <html lang="en">
                     <head>
                     <meta charset="UTF-8">
+                    <style>
+                    tr:nth-child(even) {
+                        background-color: #EEE;
+                    }
+                    td:nth-child(2) {
+                        text-align: center;
+                    }
+                    </style>
                     </head>
                     <body>
                     <table>
                     <tr>
                     <th>ID</th>
+                    <th>Cover</th>
                     <th>Title</th>
                     <th>Author</th>
                     <th>URL</th>
@@ -100,6 +109,7 @@ public final class Main {
                 );
 
                 for (Book book : db.getAllBooks()) {
+                    var coverHtml = book.cover() != 0 ? "<img height=100 src=\"%s\" alt=\"cover\">".formatted("/api/cover/" + book.cover()) : "";
                     joiner.add(
                         """
                         <td>%d</td>
@@ -107,7 +117,8 @@ public final class Main {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        """.formatted(book.id(), book.title(), book.author(), book.url(), book.barcode())
+                        <td>%s</td>
+                        """.formatted(book.id(), coverHtml, book.title(), book.author(), book.url(), book.barcode())
                     );
                 }
 
