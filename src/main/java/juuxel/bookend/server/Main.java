@@ -66,13 +66,19 @@ public final class Main {
 
                 switch (books.size()) {
                     case 1:
-                        ctx.html(templateManager.loadTemplate("ViewBook", Map.of("book", books.getFirst())));
+                        var tags = db.getTags(books.getFirst().id());
+                        var url = "/book/" + URLEncoder.encode(ctx.pathParam("code"), StandardCharsets.UTF_8);
+                        ctx.html(templateManager.loadTemplate("ViewBook", Map.of("book", books.getFirst(), "url", url, "tags", tags)));
                         break;
                     case 0:
                         ctx.status(HttpStatus.NOT_FOUND);
                     default:
                         ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
                 }
+            })
+            .get("/tag/{tag}", ctx -> {
+                List<Book> books = db.getBooksByTag(ctx.pathParam("tag"));
+                ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
             })
             .get("/search", ctx -> {
                 ctx.redirect("/book/" + URLEncoder.encode(ctx.queryParam("q"), StandardCharsets.UTF_8), HttpStatus.SEE_OTHER);
@@ -236,6 +242,58 @@ public final class Main {
                 }
 
                 ctx.redirect("/super?" + query, HttpStatus.SEE_OTHER);
+            })
+            .post("/api/add-tag", ctx -> {
+                var bookId = ctx.formParam("book");
+                var tag = ctx.formParam("tag");
+
+                if (bookId == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'book' query param");
+                    return;
+                } else if (tag == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'tag' query param");
+                    return;
+                }
+
+                var returnUrl = ctx.formParam("return");
+                if (returnUrl != null && !returnUrl.startsWith("/")) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
+                    return;
+                }
+
+                db.addTag(Integer.parseInt(bookId), tag);
+
+                if (returnUrl != null) {
+                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
+                } else {
+                    ctx.status(HttpStatus.ACCEPTED).result("OK");
+                }
+            })
+            .post("/api/remove-tag", ctx -> {
+                var bookId = ctx.formParam("book");
+                var tag = ctx.formParam("tag");
+
+                if (bookId == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Deletion missing 'book' query param");
+                    return;
+                } else if (tag == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Deletion missing 'tag' query param");
+                    return;
+                }
+
+                var returnUrl = ctx.formParam("return");
+                if (returnUrl != null && !returnUrl.startsWith("/")) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
+                    return;
+                }
+
+                db.removeTag(Integer.parseInt(bookId), tag);
+
+                if (returnUrl != null) {
+                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
+                } else {
+                    ctx.status(HttpStatus.ACCEPTED).result("OK");
+                }
             })
             .start(config.port);
     }

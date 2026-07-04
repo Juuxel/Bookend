@@ -11,13 +11,13 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class BookDb implements AutoCloseable {
@@ -25,12 +25,8 @@ public final class BookDb implements AutoCloseable {
     private final Connection connection;
 
     private BookDb(Path path) throws SQLException {
-        boolean newCopy = !Files.exists(path);
         connection = DriverManager.getConnection("jdbc:sqlite:" + path.toString().replace(File.separator, "/"));
-
-        if (newCopy) {
-            initTables();
-        }
+        initTables();
     }
 
     public static BookDb open(Path path) {
@@ -43,8 +39,9 @@ public final class BookDb implements AutoCloseable {
 
     private void initTables() throws SQLException {
         try (var statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT, cover INTEGER)");
-            statement.execute("CREATE TABLE Covers (id INTEGER PRIMARY KEY, library_ns TEXT, library_cover_id TEXT, media_type TEXT, data BLOB)");
+            statement.execute("CREATE TABLE IF NOT EXISTS Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT, cover INTEGER)");
+            statement.execute("CREATE TABLE IF NOT EXISTS Covers (id INTEGER PRIMARY KEY, library_ns TEXT, library_cover_id TEXT, media_type TEXT, data BLOB)");
+            statement.execute("CREATE TABLE IF NOT EXISTS BookTags (id INTEGER PRIMARY KEY, label TEXT, book INTEGER)");
         }
     }
 
@@ -99,6 +96,24 @@ public final class BookDb implements AutoCloseable {
         return List.of();
     }
 
+    public List<Book> getBooksByTag(String tag) {
+        try (var statement = connection.prepareStatement("SELECT Books.id, Books.title, Books.author, Books.url, Books.barcode, Books.cover FROM Books JOIN BookTags ON BookTags.book = Books.id WHERE BookTags.label=?")) {
+            statement.setString(1, tag);
+            var rs = statement.executeQuery();
+            List<Book> books = new ArrayList<>();
+
+            while (rs.next()) {
+                books.add(bookFromResultSet(rs));
+            }
+
+            return books;
+        } catch (SQLException e) {
+            LOGGER.error("Could not fetch books by tag {}", tag, e);
+        }
+
+        return List.of();
+    }
+
     public @Nullable Cover getCoverById(int id) {
         if (id == 0) return null;
 
@@ -138,6 +153,45 @@ public final class BookDb implements AutoCloseable {
 
     private Cover coverFromResultSet(ResultSet rs) throws SQLException {
         return new Cover(rs.getInt("id"), rs.getString("library_ns"), rs.getString("library_cover_id"), rs.getString("media_type"), rs.getBytes("data"));
+    }
+
+    public List<String> getTags(int bookId) {
+        try (var statement = connection.prepareStatement("SELECT label FROM BookTags WHERE book=?")) {
+            statement.setInt(1, bookId);
+            var rs = statement.executeQuery();
+            List<String> tags = new ArrayList<>();
+
+            while (rs.next()) {
+                tags.add(rs.getString(1));
+            }
+
+            Collections.sort(tags);
+            return tags;
+        } catch (SQLException e) {
+            LOGGER.error("Could not fetch tags for book {}", bookId, e);
+        }
+
+        return List.of();
+    }
+
+    public void addTag(int bookId, String tag) {
+        try (var statement = connection.prepareStatement("INSERT INTO BookTags (book, label) VALUES (?, ?)")) {
+            statement.setInt(1, bookId);
+            statement.setString(2, tag);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Could not add tag {} to book {}", tag, bookId, e);
+        }
+    }
+
+    public void removeTag(int bookId, String tag) {
+        try (var statement = connection.prepareStatement("DELETE FROM BookTags WHERE book=? AND label=?")) {
+            statement.setInt(1, bookId);
+            statement.setString(2, tag);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Could not delete tag {} from book {}", tag, bookId, e);
+        }
     }
 
     public int insert(Book book) {
