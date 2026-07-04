@@ -54,7 +54,7 @@ public final class Main {
                 }
 
                 templateCtx.put("books", books);
-                templateCtx.put("existingBarcode", ctx.queryParam("barcode"));
+                templateCtx.put("existingBarcode", ctx.queryParam("existingBarcode"));
                 templateCtx.put("fillInDetailsManually", Boolean.parseBoolean(Objects.requireNonNullElse(ctx.queryParam("fillInDetailsManually"), "false")));
 
                 ctx.html(templateManager.loadTemplate("DynamicAddOrView", templateCtx));
