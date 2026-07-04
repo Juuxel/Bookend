@@ -169,8 +169,9 @@ public final class Main {
                 var author = ctx.formParam("author");
                 var url = ctx.formParam("url");
                 var barcode = ctx.formParam("barcode");
+                var note = ctx.formParam("note");
 
-                int bookId = db.insert(new Book(-1, title, author, url, barcode, 0));
+                int bookId = db.insert(new Book(-1, title, author, url, barcode, 0, note));
                 ctx.redirect("/book/" + Objects.requireNonNullElse(barcode, "" + bookId), HttpStatus.SEE_OTHER);
             })
             .post("/api/insert-with-library-apis", ctx -> {
@@ -218,7 +219,7 @@ public final class Main {
 
                     if (viaLibraries == null) {
                         if (hasTitle) {
-                            toAdd = new Book(-1, ctx.formParam("title"), emptyToNull(ctx.formParam("author")), emptyToNull(ctx.formParam("url")), barcode, 0);
+                            toAdd = new Book(-1, ctx.formParam("title"), emptyToNull(ctx.formParam("author")), emptyToNull(ctx.formParam("url")), barcode, 0, emptyToNull(ctx.formParam("note")));
                         } else {
                             query.add("fillInDetailsManually=true");
                             query.add("existingBarcode=" + barcode);
@@ -230,7 +231,8 @@ public final class Main {
                             firstNonNull(emptyToNull(ctx.formParam("author")), viaLibraries.author()),
                             firstNonNull(emptyToNull(ctx.formParam("url")), viaLibraries.url()),
                             barcode,
-                            viaLibraries.cover()
+                            viaLibraries.cover(),
+                            emptyToNull(ctx.formParam("note"))
                         );
                     }
 
@@ -291,6 +293,32 @@ public final class Main {
                 }
 
                 db.removeTag(Integer.parseInt(bookId), tag);
+
+                if (returnUrl != null) {
+                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
+                } else {
+                    ctx.status(HttpStatus.ACCEPTED).result("OK");
+                }
+            })
+            .post("/api/set-note", ctx -> {
+                var bookId = ctx.formParam("book");
+                var note = ctx.formParam("note");
+
+                if (bookId == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Update missing 'book' query param");
+                    return;
+                } else if (note == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Update missing 'note' query param");
+                    return;
+                }
+
+                var returnUrl = ctx.formParam("return");
+                if (returnUrl != null && !returnUrl.startsWith("/")) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
+                    return;
+                }
+
+                db.updateNote(Integer.parseInt(bookId), note);
 
                 if (returnUrl != null) {
                     ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);

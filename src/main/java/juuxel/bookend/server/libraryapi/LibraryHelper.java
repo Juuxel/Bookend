@@ -61,7 +61,7 @@ public final class LibraryHelper implements Closeable {
             }
         }
 
-        return new Book(-1, record.title(), String.join("; ", record.authors()), record.url(), barcode, coverDbId);
+        return new Book(-1, record.title(), String.join("; ", record.authors()), record.url(), barcode, coverDbId, null);
     }
 
     @Override

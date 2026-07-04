@@ -39,7 +39,7 @@ public final class BookDb implements AutoCloseable {
 
     private void initTables() throws SQLException {
         try (var statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE IF NOT EXISTS Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT, cover INTEGER)");
+            statement.execute("CREATE TABLE IF NOT EXISTS Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT, cover INTEGER, note TEXT)");
             statement.execute("CREATE TABLE IF NOT EXISTS Covers (id INTEGER PRIMARY KEY, library_ns TEXT, library_cover_id TEXT, media_type TEXT, data BLOB)");
             statement.execute("CREATE TABLE IF NOT EXISTS BookTags (id INTEGER PRIMARY KEY, label TEXT, book INTEGER)");
         }
@@ -62,7 +62,7 @@ public final class BookDb implements AutoCloseable {
     }
 
     private Book bookFromResultSet(ResultSet rs) throws SQLException {
-        return new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author"), rs.getString("url"), rs.getString("barcode"), rs.getInt("cover"));
+        return new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author"), rs.getString("url"), rs.getString("barcode"), rs.getInt("cover"), rs.getString("note"));
     }
 
     public List<Book> getBooksByCode(String searchTerm) {
@@ -212,6 +212,16 @@ public final class BookDb implements AutoCloseable {
         }
 
         return -1;
+    }
+
+    public void updateNote(int bookId, String note) {
+        try (var statement = connection.prepareStatement("UPDATE Books SET note=? WHERE id=?")) {
+            statement.setString(1, note);
+            statement.setInt(2, bookId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Could not update note of book {} to {}", bookId, note, e);
+        }
     }
 
     public int insert(Cover cover) {

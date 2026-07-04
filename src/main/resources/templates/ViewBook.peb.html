@@ -50,6 +50,15 @@
         <td>QR</td>
         <td><img src="/api/qr?code={{ book.barcode }}&note={{ book.title }}%0A{{ book.barcode }}"></td>
     </tr>
+    <tr>
+        <td>Note</td>
+        <td><form action="/api/set-note" method="POST">
+            <input type="text" name="book" style="display: none" required value="{{ book.id }}">
+            <textarea name="note" rows="5" cols="80">{{ book.note }}</textarea>
+            <input type="text" name="return" style="display: none" value="{{ url }}">
+            <button>Save</button>
+        </form></td>
+    </tr>
     </tbody>
 </table>
 {% endblock %}
