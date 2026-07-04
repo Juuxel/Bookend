@@ -46,6 +46,10 @@
                 </ul>
             </td>
         </tr>
+    <tr>
+        <td>QR</td>
+        <td><img src="/api/qr?code={{ book.barcode }}&note={{ book.title }}%0A{{ book.barcode }}"></td>
+    </tr>
     </tbody>
 </table>
 {% endblock %}
