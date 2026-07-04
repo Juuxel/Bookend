@@ -16,6 +16,7 @@ dependencies {
     implementation libs.sqlite
     implementation libs.slf4j
     implementation("org.jspecify:jspecify:1.0.0") // todo: catalog
+    implementation 'com.google.code.gson:gson:2.14.0'
     runtimeOnly libs.logback
 
     testImplementation platform('org.junit:junit-bom:5.10.0')

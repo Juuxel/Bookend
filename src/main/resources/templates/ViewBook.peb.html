@@ -13,11 +13,15 @@
         </tr>
         <tr>
             <td>URL</td>
-            <td>{{ book.url }}</td>
+            <td><a href="{{ book.url }}">{{ book.url }}</a></td>
         </tr>
         <tr>
             <td>Barcode</td>
             <td>{{ book.barcode }}</td>
+        </tr>
+        <tr>
+            <td>Cover</td>
+            <td><img src="/api/cover/{{ book.cover }}" alt="{{ book.title }} cover"><br>{{ book.cover }}</td>
         </tr>
     </tbody>
 </table>

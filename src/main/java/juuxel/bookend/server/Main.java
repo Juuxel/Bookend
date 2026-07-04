@@ -9,6 +9,7 @@ package juuxel.bookend.server;
 import io.javalin.Javalin;
 import io.javalin.http.HttpStatus;
 import juuxel.bookend.config.Config;
+import juuxel.bookend.server.libraryapi.LibraryHelper;
 import juuxel.bookend.storage.Book;
 import juuxel.bookend.storage.BookDb;
 import juuxel.bookend.template.TemplateManager;
@@ -40,6 +41,7 @@ public final class Main {
             })
             .get("/", ctx -> ctx.html(templateManager.loadTemplate("FrontPage")))
             .get("/add", ctx -> ctx.html(templateManager.loadTemplate("AddBooks")))
+            .get("/add-via-libraries", ctx -> ctx.html(templateManager.loadTemplate("AddBooksViaLibraries")))
             .get("/book/{code}", ctx -> {
                 List<Book> books = db.getBooksByCode(ctx.pathParam("code"));
 
@@ -91,6 +93,15 @@ public final class Main {
 
                 ctx.html(joiner.toString());
             })
+            .get("/api/cover/{code}", ctx -> {
+                var cover = db.getCoverById(Integer.parseInt(ctx.pathParam("code")));
+                if (cover == null) {
+                    ctx.status(HttpStatus.NOT_FOUND);
+                    return;
+                }
+                ctx.contentType(cover.mediaType());
+                ctx.result(cover.blob());
+            })
             .post("/api/mass-insert", ctx -> {
                 var barcodes = ctx.queryParam("barcodes");
 
@@ -114,8 +125,22 @@ public final class Main {
                 var url = ctx.formParam("url");
                 var barcode = ctx.formParam("barcode");
 
-                int bookId = db.insert(new Book(-1, title, author, url, barcode));
+                int bookId = db.insert(new Book(-1, title, author, url, barcode, 0));
                 ctx.redirect("/book/" + Objects.requireNonNullElse(barcode, "" + bookId), HttpStatus.SEE_OTHER);
+            })
+            .post("/api/insert-with-library-apis", ctx -> {
+                var barcode = ctx.formParam("barcode");
+
+                if (barcode == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'barcode' query param");
+                    return;
+                }
+
+                try (var helper = new LibraryHelper(db)) {
+                     helper.insertViaLibraries(barcode);
+                }
+
+                ctx.redirect("/book/" + barcode, HttpStatus.SEE_OTHER);
             })
             .start(config.port);
     }

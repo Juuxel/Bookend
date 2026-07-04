@@ -7,6 +7,7 @@
 package juuxel.bookend.storage;
 
 import juuxel.bookend.util.Logging;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -42,7 +43,8 @@ public final class BookDb implements AutoCloseable {
 
     private void initTables() throws SQLException {
         try (var statement = connection.createStatement()) {
-            statement.execute("CREATE TABLE Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT)");
+            statement.execute("CREATE TABLE Books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, url TEXT, barcode TEXT, cover INTEGER)");
+            statement.execute("CREATE TABLE Covers (id INTEGER PRIMARY KEY, library_ns TEXT, library_cover_id TEXT, media_type TEXT, data BLOB)");
         }
     }
 
@@ -63,7 +65,7 @@ public final class BookDb implements AutoCloseable {
     }
 
     private Book bookFromResultSet(ResultSet rs) throws SQLException {
-        return new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author"), rs.getString("url"), rs.getString("barcode"));
+        return new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author"), rs.getString("url"), rs.getString("barcode"), rs.getInt("cover"));
     }
 
     public List<Book> getBooksByCode(String searchTerm) {
@@ -97,12 +99,54 @@ public final class BookDb implements AutoCloseable {
         return List.of();
     }
 
+    public @Nullable Cover getCoverById(int id) {
+        if (id == 0) return null;
+
+        try {
+            try (var statement = connection.prepareStatement("SELECT * FROM Covers WHERE id=?")) {
+                statement.setInt(1, id);
+                var rs = statement.executeQuery();
+
+                if (rs.next()) {
+                    return coverFromResultSet(rs);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Could not fetch cover by id {}", id, e);
+        }
+
+        return null;
+    }
+
+    public @Nullable Cover getCoverByLibraryId(String libraryNs, String libraryId) {
+        try {
+            try (var statement = connection.prepareStatement("SELECT * FROM Covers WHERE library_ns=? AND library_cover_id=?")) {
+                statement.setString(1, libraryNs);
+                statement.setString(2, libraryId);
+                var rs = statement.executeQuery();
+
+                if (rs.next()) {
+                    return coverFromResultSet(rs);
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Could not fetch cover by {} cover id {}", libraryNs, libraryId, e);
+        }
+
+        return null;
+    }
+
+    private Cover coverFromResultSet(ResultSet rs) throws SQLException {
+        return new Cover(rs.getInt("id"), rs.getString("library_ns"), rs.getString("library_cover_id"), rs.getString("media_type"), rs.getBytes("data"));
+    }
+
     public int insert(Book book) {
-        try (var statement = connection.prepareStatement("INSERT INTO Books (title, author, url, barcode) VALUES (?, ?, ?, ?)")) {
+        try (var statement = connection.prepareStatement("INSERT INTO Books (title, author, url, barcode, cover) VALUES (?, ?, ?, ?, ?)")) {
             statement.setString(1, book.title());
             statement.setString(2, book.author());
             statement.setString(3, book.url());
             statement.setString(4, book.barcode());
+            statement.setInt(5, book.cover());
             statement.executeUpdate();
 
             ResultSet rs = statement.getGeneratedKeys();
@@ -111,6 +155,25 @@ public final class BookDb implements AutoCloseable {
             }
         } catch (SQLException e) {
             LOGGER.error("Could not insert book {}", book, e);
+        }
+
+        return -1;
+    }
+
+    public int insert(Cover cover) {
+        try (var statement = connection.prepareStatement("INSERT INTO Covers (library_ns, library_cover_id, media_type, data) VALUES (?, ?, ?, ?)")) {
+            statement.setString(1, cover.libraryNs());
+            statement.setString(2, cover.libraryCoverId());
+            statement.setString(3, cover.mediaType());
+            statement.setBytes(4, cover.blob());
+            statement.executeUpdate();
+
+            ResultSet rs = statement.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Could not insert cover {}", cover, e);
         }
 
         return -1;
