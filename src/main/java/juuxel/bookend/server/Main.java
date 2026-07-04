@@ -114,16 +114,16 @@ public final class Main {
                 );
 
                 for (Book book : db.getAllBooks()) {
-                    var coverHtml = book.cover() != 0 ? "<img height=100 src=\"%s\" alt=\"cover\">".formatted("/api/cover/" + book.cover()) : "";
+                    var coverHtml = book.cover() != 0 ? "<a href=\"/book/%d\"><img height=100 src=\"/api/cover/%s\" alt=\"cover\"></a>".formatted(book.id(), book.cover()) : "";
                     joiner.add(
                         """
-                        <td>%d</td>
+                        <td><a href="/book/%d">%d</a></td>
+                        <td>%s</td>
+                        <td><a href="/book/%d">%s</a></td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        """.formatted(book.id(), coverHtml, book.title(), book.author(), book.url(), book.barcode())
+                        """.formatted(book.id(), book.id(), coverHtml, book.id(), book.title(), book.author(), book.url(), book.barcode())
                     );
                 }
 
