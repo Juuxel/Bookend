@@ -3,11 +3,11 @@
 {% block content %}
 
 <form action="/api/dynamic-insert" method="POST">
+    <label for="barcode-input">Barcode</label> <input type="text" name="barcode" id="barcode-input" required autofocus
+        {% if existingBarcode != null %}value="{{ existingBarcode }}"{% endif %}>
     <label for="title-input">Title</label> <input type="text" name="title" id="title-input">
     <label for="author-input">Author</label> <input type="text" name="author" id="author-input">
     <label for="url-input">URL</label> <input type="text" name="url" id="url-input">
-    <label for="barcode-input">Barcode</label> <input type="text" name="barcode" id="barcode-input" required autofocus
-        {% if existingBarcode != null %}value="{{ existingBarcode }}"{% endif %}>
     <button>Add</button>
 </form>
 
