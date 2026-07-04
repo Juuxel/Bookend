@@ -7,6 +7,7 @@
 package juuxel.bookend.server;
 
 import io.javalin.Javalin;
+import io.javalin.http.ContentType;
 import io.javalin.http.HttpStatus;
 import juuxel.bookend.config.Config;
 import juuxel.bookend.server.libraryapi.LibraryHelper;
@@ -14,6 +15,7 @@ import juuxel.bookend.storage.Book;
 import juuxel.bookend.storage.BookDb;
 import juuxel.bookend.template.TemplateManager;
 import juuxel.bookend.util.Logging;
+import juuxel.bookend.util.QrGenerator;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -83,6 +85,7 @@ public final class Main {
             .get("/search", ctx -> {
                 ctx.redirect("/book/" + URLEncoder.encode(ctx.queryParam("q"), StandardCharsets.UTF_8), HttpStatus.SEE_OTHER);
             })
+            .get("/qr", ctx -> ctx.html(templateManager.loadTemplate("GenerateQr")))
             .get("/api/all", ctx -> {
                 var joiner = new StringJoiner(
                     "</tr><tr>",
@@ -294,6 +297,12 @@ public final class Main {
                 } else {
                     ctx.status(HttpStatus.ACCEPTED).result("OK");
                 }
+            })
+            .get("/api/qr", ctx -> {
+                var code = ctx.queryParam("code");
+                var note = Objects.requireNonNullElse(ctx.queryParam("note"), "");
+                var image = QrGenerator.generateQrImage(code, note);
+                ctx.contentType(ContentType.IMAGE_PNG).result(image);
             })
             .start(config.port);
     }

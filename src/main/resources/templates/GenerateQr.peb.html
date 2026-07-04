@@ -1,0 +1,10 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+<form action="/api/qr" method="GET">
+    <label for="code-input">Code</label> <input type="text" name="code" id="code-input" required>
+    <label for="note-input">Note</label>
+    <textarea name="note" id="note-input" rows="4" cols="100"></textarea>
+    <button>Generate</button>
+</form>
+{% endblock %}
