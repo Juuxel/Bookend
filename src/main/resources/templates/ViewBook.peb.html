@@ -48,7 +48,7 @@
         </tr>
     <tr>
         <td>QR</td>
-        <td><img src="/api/qr?code={{ book.barcode }}&note={{ book.title }}%0A{{ book.barcode }}"></td>
+        <td><img src="/api/qr?code={{ book.barcode }}&note={{ book.title }}%0A{{ book.barcode }}{% if book.note != "" %}%0A{{ book.note }}{% endif %}"></td>
     </tr>
     <tr>
         <td>Note</td>
