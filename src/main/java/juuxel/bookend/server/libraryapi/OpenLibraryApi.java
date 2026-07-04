@@ -15,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public final class OpenLibraryApi implements LibraryApi {
     private static final String SEARCH_API_URL = "https://openlibrary.org/search.json?q=%s";
@@ -40,7 +41,7 @@ public final class OpenLibraryApi implements LibraryApi {
         }
 
         var doc = searchJson.getAsJsonArray("docs").get(0).getAsJsonObject();
-        var authors = doc.getAsJsonArray("author_name").asList().stream().map(child -> child.getAsJsonPrimitive().getAsString()).toList();
+        List<String> authors = doc.has("author_name") ? doc.getAsJsonArray("author_name").asList().stream().map(child -> child.getAsJsonPrimitive().getAsString()).toList() : List.of();
         var title = doc.getAsJsonPrimitive("title").getAsString();
         var url = "https://openlibrary.org" + doc.getAsJsonPrimitive("key").getAsString();
         var coverI = doc.has("cover_i") ? "" + doc.getAsJsonPrimitive("cover_i").getAsInt() : null;
