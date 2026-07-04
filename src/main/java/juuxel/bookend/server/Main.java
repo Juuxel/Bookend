@@ -63,13 +63,13 @@ public final class Main {
                 List<Book> books = db.getBooksByCode(ctx.pathParam("code"));
 
                 switch (books.size()) {
-                    case 0 -> ctx.status(HttpStatus.NOT_FOUND).result("Didn't find it :(");
-                    case 1 -> {
+                    case 1:
                         ctx.html(templateManager.loadTemplate("ViewBook", Map.of("book", books.getFirst())));
-                    }
-                    default -> {
+                        break;
+                    case 0:
+                        ctx.status(HttpStatus.NOT_FOUND);
+                    default:
                         ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
-                    }
                 }
             })
             .get("/api/all", ctx -> {
