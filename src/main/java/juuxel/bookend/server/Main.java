@@ -168,6 +168,9 @@ public final class Main {
                 if (barcode == null) {
                     ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'barcode' query param");
                     return;
+                } else if (barcode.startsWith("clear")) {
+                    ctx.redirect("/super", HttpStatus.SEE_OTHER); // clear barcode field in case of misscan
+                    return;
                 }
 
                 StringJoiner query = new StringJoiner("&");
