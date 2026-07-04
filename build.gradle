@@ -31,18 +31,3 @@ test {
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
 }
-
-def compileTypescriptTask = tasks.register('compileTypescript', Exec) {
-    commandLine 'cmd', '/C', 'npx rollup -c'
-    inputs.dir 'src/main/typescript'
-    inputs.files('package.json', 'package-lock.json', 'rollup.config.js', 'tsconfig.json')
-    outputs.file 'build/script.js'
-    outputs.file 'build/zbar.wasm'
-}
-
-tasks.named('processResources', ProcessResources) {
-    dependsOn 'compileTypescript'
-    from(compileTypescriptTask.map { it.outputs.files }) {
-        into 'static'
-    }
-}
