@@ -1,4 +1,8 @@
 {% extends "Base.peb.html" %}
 
 {% block content %}
+<form action="/search" method="GET">
+    <label for="search-input">Search for books</label> <input type="text" name="q" id="search-input" required>
+    <button>🔎</button>
+</form>
 {% endblock %}

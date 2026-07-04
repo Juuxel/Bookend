@@ -17,6 +17,8 @@ import juuxel.bookend.util.Logging;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +73,9 @@ public final class Main {
                     default:
                         ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
                 }
+            })
+            .get("/search", ctx -> {
+                ctx.redirect("/book/" + URLEncoder.encode(ctx.queryParam("q"), StandardCharsets.UTF_8), HttpStatus.SEE_OTHER);
             })
             .get("/api/all", ctx -> {
                 var joiner = new StringJoiner(
