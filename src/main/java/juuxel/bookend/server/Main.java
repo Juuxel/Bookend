@@ -14,9 +14,12 @@ import juuxel.bookend.storage.Book;
 import juuxel.bookend.storage.BookDb;
 import juuxel.bookend.template.TemplateManager;
 import juuxel.bookend.util.Logging;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +45,20 @@ public final class Main {
             .get("/", ctx -> ctx.html(templateManager.loadTemplate("FrontPage")))
             .get("/add", ctx -> ctx.html(templateManager.loadTemplate("AddBooks")))
             .get("/add-via-libraries", ctx -> ctx.html(templateManager.loadTemplate("AddBooksViaLibraries")))
+            .get("/super", ctx -> {
+                Map<String, @Nullable Object> templateCtx = new HashMap<>();
+                List<Book> books = new ArrayList<>();
+
+                for (String book : ctx.queryParams("book")) {
+                    books.addAll(db.getBooksByCode(book));
+                }
+
+                templateCtx.put("books", books);
+                templateCtx.put("existingBarcode", ctx.queryParam("barcode"));
+                templateCtx.put("fillInDetailsManually", Boolean.parseBoolean(Objects.requireNonNullElse(ctx.queryParam("fillInDetailsManually"), "false")));
+
+                ctx.html(templateManager.loadTemplate("DynamicAddOrView", templateCtx));
+            })
             .get("/book/{code}", ctx -> {
                 List<Book> books = db.getBooksByCode(ctx.pathParam("code"));
 
@@ -142,6 +159,70 @@ public final class Main {
 
                 ctx.redirect("/book/" + barcode, HttpStatus.SEE_OTHER);
             })
+            .post("/api/dynamic-insert", ctx -> {
+                var barcode = ctx.formParam("barcode");
+
+                if (barcode == null) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'barcode' query param");
+                    return;
+                }
+
+                StringJoiner query = new StringJoiner("&");
+                List<String> shownBooks = new ArrayList<>();
+                List<Book> existingBooks = db.getBooksByCode(barcode);
+
+                if (!existingBooks.isEmpty()) {
+                    for (Book existingBook : existingBooks) {
+                        shownBooks.add("" + existingBook.id());
+                    }
+                } else {
+                    boolean hasTitle = ctx.formParam("title") != null && !ctx.formParam("title").isBlank();
+                    Book viaLibraries;
+
+                    try (var helper = new LibraryHelper(db)) {
+                        viaLibraries = helper.getViaLibraries(barcode);
+                    }
+
+                    Book toAdd = null;
+
+                    if (viaLibraries == null) {
+                        if (hasTitle) {
+                            toAdd = new Book(-1, ctx.formParam("title"), emptyToNull(ctx.formParam("author")), emptyToNull(ctx.formParam("url")), barcode, 0);
+                        } else {
+                            query.add("fillInDetailsManually=true");
+                            query.add("existingBarcode=" + barcode);
+                        }
+                    } else {
+                        toAdd = new Book(
+                            -1,
+                            Objects.requireNonNullElse(emptyToNull(ctx.formParam("title")), viaLibraries.title()),
+                            firstNonNull(emptyToNull(ctx.formParam("author")), viaLibraries.author()),
+                            firstNonNull(emptyToNull(ctx.formParam("url")), viaLibraries.url()),
+                            barcode,
+                            viaLibraries.cover()
+                        );
+                    }
+
+                    if (toAdd != null) {
+                        int bookId = db.insert(toAdd);
+                        shownBooks.add("" + bookId);
+                    }
+                }
+
+                for (String shownBook : shownBooks) {
+                    query.add("book=" + shownBook);
+                }
+
+                ctx.redirect("/super?" + query, HttpStatus.SEE_OTHER);
+            })
             .start(config.port);
+    }
+
+    private static @Nullable String emptyToNull(@Nullable String a) {
+        return a != null && !a.isEmpty() ? a : null;
+    }
+
+    private static @Nullable String firstNonNull(@Nullable String a, @Nullable String b) {
+        return a != null ? a : b;
     }
 }

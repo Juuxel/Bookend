@@ -3,6 +3,7 @@ package juuxel.bookend.server.libraryapi;
 import juuxel.bookend.storage.Book;
 import juuxel.bookend.storage.BookDb;
 import juuxel.bookend.storage.Cover;
+import org.jspecify.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -23,21 +24,27 @@ public final class LibraryHelper implements Closeable {
     }
 
     public int insertViaLibraries(String barcode) {
+        var book = getViaLibraries(barcode);
+        if (book == null) return -1;
+        return db.insert(book);
+    }
+
+    public @Nullable Book getViaLibraries(String barcode) {
         try {
             for (var api : libraryApis) {
-                int result = insertViaLibrary(api, barcode);
-                if (result > 0) return result;
+                var result = getViaLibrary(api, barcode);
+                if (result != null) return result;
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        return -1;
+        return null;
     }
 
-    private int insertViaLibrary(LibraryApi api, String barcode) throws IOException, InterruptedException {
+    private @Nullable Book getViaLibrary(LibraryApi api, String barcode) throws IOException, InterruptedException {
         var record = api.getFromBarcode(client, barcode);
-        if (record == null) return -1;
+        if (record == null) return null;
 
         int coverDbId = 0;
 
@@ -54,8 +61,7 @@ public final class LibraryHelper implements Closeable {
             }
         }
 
-        var book = new Book(-1, record.title(), String.join("; ", record.authors()), record.url(), barcode, coverDbId);
-        return db.insert(book);
+        return new Book(-1, record.title(), String.join("; ", record.authors()), record.url(), barcode, coverDbId);
     }
 
     @Override

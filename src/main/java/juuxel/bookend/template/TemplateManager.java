@@ -7,6 +7,7 @@
 package juuxel.bookend.template;
 
 import io.pebbletemplates.pebble.PebbleEngine;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -27,7 +28,7 @@ public final class TemplateManager {
         return loadTemplate(name, Map.of());
     }
 
-    public String loadTemplate(String name, Map<String, Object> context) {
+    public String loadTemplate(String name, Map<String, @Nullable Object> context) {
         var template = engine.getTemplate(name + EXTENSION);
         var writer = new StringWriter();
 

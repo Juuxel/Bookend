@@ -1,0 +1,47 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+
+<form action="/api/dynamic-insert" method="POST">
+    <label for="title-input">Title</label> <input type="text" name="title" id="title-input">
+    <label for="author-input">Author</label> <input type="text" name="author" id="author-input">
+    <label for="url-input">URL</label> <input type="text" name="url" id="url-input">
+    <label for="barcode-input">Barcode</label> <input type="text" name="barcode" id="barcode-input" required autofocus
+        {% if existingBarcode != null %}value="{{ existingBarcode }}"{% endif %}>
+    <button>Add</button>
+</form>
+
+{% if fillInDetailsManually %}
+    <p class="error">Could not find information on the book in library databases. Fill in the details manually.</p>
+{% endif %}
+
+{% for book in books %}
+<hr>
+<table>
+    <tbody>
+    <tr>
+        <td>Title</td>
+        <td>{{ book.title }}</td>
+    </tr>
+    <tr>
+        <td>Author</td>
+        <td>{{ book.author }}</td>
+    </tr>
+    <tr>
+        <td>URL</td>
+        <td><a href="{{ book.url }}">{{ book.url }}</a></td>
+    </tr>
+    <tr>
+        <td>Barcode</td>
+        <td>{{ book.barcode }}</td>
+    </tr>
+    {% if book.cover != 0 %}
+    <tr>
+        <td>Cover</td>
+        <td><img src="/api/cover/{{ book.cover }}" alt="{{ book.title }} cover"><br>{{ book.cover }}</td>
+    </tr>
+    {% endif %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}
