@@ -99,13 +99,20 @@ button:disabled {
 .navbar {
     width: 100%;
     height: 2rem;
-    background-color: #26C6DA;
+    background: linear-gradient(to bottom, #26C6DA, #01ABC1);
+    border-bottom: solid 1px #00828F;
+    box-shadow: #BBB 0 1ex 1ex -0.7ex;
     padding: 1rem;
     font-size: 1.4rem;
+    user-select: none;
 }
 
 .navbar a {
     color: white;
+}
+
+.navbar a:not(:first-child)::before {
+    content: "/ ";
 }
 
 .text-field-container {
@@ -126,4 +133,8 @@ button:disabled {
     position: absolute;
     background: red;
     padding: 1rex;
+}
+
+main {
+    padding: 1ex;
 }
