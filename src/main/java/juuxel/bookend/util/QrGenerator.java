@@ -4,22 +4,23 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.qrcode.QRCodeWriter;
+import org.jspecify.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public final class QrGenerator {
-    public static byte[] generateQrImage(String qrText, String note) {
+    public static byte[] generateQrImage(String qrText, @Nullable String note) {
         try {
             var writer = new QRCodeWriter();
             var matrix = writer.encode(qrText, BarcodeFormat.QR_CODE, 64, 64);
             var codeImage = MatrixToImageWriter.toBufferedImage(matrix);
+            if (note == null) return renderImageToPng(codeImage);
 
             var font = new Font("Noto Sans", Font.PLAIN, 16);
             var noteLines = note.split("\n");
@@ -40,12 +41,16 @@ public final class QrGenerator {
                 y += 18;
             }
             g.dispose();
-            var out = new ByteArrayOutputStream();
-            ImageIO.write(fullImage, "PNG", out);
-            return out.toByteArray();
+            return renderImageToPng(fullImage);
         } catch (WriterException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static byte[] renderImageToPng(BufferedImage image) throws IOException {
+        var out = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", out);
+        return out.toByteArray();
     }
 
     private static int calculateNoteWidth(String[] noteLines, Font font) {
