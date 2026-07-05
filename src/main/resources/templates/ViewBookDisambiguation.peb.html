@@ -2,13 +2,14 @@
 
 {% block content %}
 Found {{ books.size }} results.
-<table>
+<table class="search-result-table">
     <thead>
         <tr>
             <td>UID</td>
             <td>Cover</td>
             <td>Title</td>
             <td>Author</td>
+            <td>QR</td>
         </tr>
     </thead>
     <tbody>
@@ -18,6 +19,7 @@ Found {{ books.size }} results.
                 <td style="text-align: center">{% if book.cover != 0 %}<a href="/book/{{ book.id }}"><img src="/api/cover/{{ book.cover }}" height="100" alt></a>{% endif %}</td>
                 <td><a href="/book/{{ book.id }}">{{ book.title }}</a></td>
                 <td>{{ book.author }}</td>
+                <td>{% if book.barcode != "" %}<img src="/api/qr?code={{ book.barcode }}" alt>{% endif %}</td>
             </tr>
         {% endfor %}
     </tbody>

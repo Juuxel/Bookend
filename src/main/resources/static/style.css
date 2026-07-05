@@ -138,3 +138,28 @@ button:disabled {
 main {
     padding: 1ex;
 }
+
+.search-result-table {
+    display: grid;
+    grid-template-columns: max-content max-content auto max-content max-content;
+}
+
+.search-result-table tbody, .search-result-table thead, .search-result-table tr {
+    display: contents;
+}
+
+.search-result-table thead {
+    font-weight: bold;
+}
+
+.search-result-table td {
+    padding: 0.35ex;
+    align-content: center;
+    border-bottom: solid 1px #CCC;
+}
+
+@media print {
+    .navbar {
+        display: none;
+    }
+}
