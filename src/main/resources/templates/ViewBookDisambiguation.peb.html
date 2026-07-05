@@ -6,6 +6,7 @@ Found {{ books.size }} results.
     <thead>
         <tr>
             <td>UID</td>
+            <td>Cover</td>
             <td>Title</td>
             <td>Author</td>
         </tr>
@@ -14,6 +15,7 @@ Found {{ books.size }} results.
         {% for book in books %}
             <tr>
                 <td>{{ book.id }}</td>
+                <td style="text-align: center">{% if book.cover != 0 %}<a href="/book/{{ book.id }}"><img src="/api/cover/{{ book.cover }}" height="100" alt></a>{% endif %}</td>
                 <td><a href="/book/{{ book.id }}">{{ book.title }}</a></td>
                 <td>{{ book.author }}</td>
             </tr>
