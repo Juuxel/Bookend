@@ -97,6 +97,17 @@ public final class Main {
                 ctx.redirect("/book/" + URLEncoder.encode(ctx.queryParam("q"), StandardCharsets.UTF_8), HttpStatus.SEE_OTHER);
             })
             .get("/qr", ctx -> ctx.html(templateManager.loadTemplate("GenerateQr")))
+            .get("/mass-search", ctx -> ctx.html(templateManager.loadTemplate("MassSearch")))
+            .get("/list", ctx -> {
+                var query = Lines.nonEmptyLines(ctx.queryParam("q"));
+                List<Book> books = new ArrayList<>();
+
+                for (var code : query) {
+                    books.addAll(db.getBooksByCode(code));
+                }
+
+                ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
+            })
             .get("/api/all", ctx -> {
                 var joiner = new StringJoiner(
                     "</tr><tr>",

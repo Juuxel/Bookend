@@ -1,0 +1,9 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+<form action="/list" method="GET">
+    <label for="search-input">Search for books</label>
+    <div><textarea name="q" id="search-input" cols="100" rows="8" required></textarea></div>
+    <button>Search</button>
+</form>
+{% endblock %}
