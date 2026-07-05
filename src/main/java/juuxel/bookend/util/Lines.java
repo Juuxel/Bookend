@@ -14,6 +14,6 @@ import java.util.List;
 public final class Lines {
     public static List<String> nonEmptyLines(@Nullable String s) {
         if (s == null || s.isEmpty()) return List.of();
-        return Arrays.stream(s.split("\n")).filter(line -> !line.isEmpty()).toList();
+        return Arrays.stream(s.split("\r?\n")).filter(line -> !line.isEmpty()).toList();
     }
 }
