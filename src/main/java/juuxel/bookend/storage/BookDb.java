@@ -97,7 +97,7 @@ public final class BookDb implements AutoCloseable {
     }
 
     public List<Book> getBooksByTag(String tag) {
-        try (var statement = connection.prepareStatement("SELECT Books.id, Books.title, Books.author, Books.url, Books.barcode, Books.cover FROM Books JOIN BookTags ON BookTags.book = Books.id WHERE BookTags.label=?")) {
+        try (var statement = connection.prepareStatement("SELECT Books.id, Books.title, Books.author, Books.url, Books.barcode, Books.cover, Books.note FROM Books JOIN BookTags ON BookTags.book = Books.id WHERE BookTags.label=?")) {
             statement.setString(1, tag);
             var rs = statement.executeQuery();
             List<Book> books = new ArrayList<>();
