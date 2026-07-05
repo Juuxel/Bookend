@@ -28,21 +28,8 @@
             <td>
                 <ul>
                 {% for tag in tags %}
-                    <li><a href="/tag/{{ tag }}">{{ tag }}</a><form action="/api/remove-tag" method="POST">
-                        <input type="text" name="book" style="display: none" required value="{{ book.id }}">
-                        <input type="text" name="tag" style="display: none" required value="{{ tag }}">
-                        <input type="text" name="return" style="display: none" value="{{ url }}">
-                        <button>❌</button>
-                    </form></li>
+                    <li><a href="/tag/{{ tag }}">{{ tag }}</a></li>
                 {% endfor %}
-                    <li>
-                        <form action="/api/add-tag" method="POST">
-                            <input type="text" name="book" style="display: none" required value="{{ book.id }}">
-                            <input type="text" name="tag" required>
-                            <input type="text" name="return" style="display: none" value="{{ url }}">
-                            <button>➕</button>
-                        </form>
-                    </li>
                 </ul>
             </td>
         </tr>
@@ -52,13 +39,9 @@
     </tr>
     <tr>
         <td>Note</td>
-        <td><form action="/api/set-note" method="POST">
-            <input type="text" name="book" style="display: none" required value="{{ book.id }}">
-            <textarea name="note" rows="5" cols="80">{{ book.note }}</textarea>
-            <input type="text" name="return" style="display: none" value="{{ url }}">
-            <button>Save</button>
-        </form></td>
+        <td><pre>{{ book.note }}</pre></td>
     </tr>
     </tbody>
 </table>
+<a href="/book/{{ book.id }}/edit">Edit</a>
 {% endblock %}

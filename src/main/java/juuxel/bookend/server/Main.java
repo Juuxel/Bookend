@@ -14,6 +14,7 @@ import juuxel.bookend.server.libraryapi.LibraryHelper;
 import juuxel.bookend.storage.Book;
 import juuxel.bookend.storage.BookDb;
 import juuxel.bookend.template.TemplateManager;
+import juuxel.bookend.util.Lines;
 import juuxel.bookend.util.Logging;
 import juuxel.bookend.util.QrGenerator;
 import org.jspecify.annotations.Nullable;
@@ -76,6 +77,16 @@ public final class Main {
                         ctx.status(HttpStatus.NOT_FOUND);
                     default:
                         ctx.html(templateManager.loadTemplate("ViewBookDisambiguation", Map.of("books", books)));
+                }
+            })
+            .get("/book/{code}/edit", ctx -> {
+                List<Book> books = db.getBooksByCode(ctx.pathParam("code"));
+
+                if (books.size() == 1) {
+                    var tags = db.getTags(books.getFirst().id());
+                    ctx.html(templateManager.loadTemplate("EditBook", Map.of("book", books.getFirst(), "tags", tags)));
+                } else {
+                    ctx.redirect("/book/" + ctx.pathParam("code"), HttpStatus.SEE_OTHER);
                 }
             })
             .get("/tag/{tag}", ctx -> {
@@ -248,83 +259,40 @@ public final class Main {
 
                 ctx.redirect("/super?" + query, HttpStatus.SEE_OTHER);
             })
-            .post("/api/add-tag", ctx -> {
+            .post("/api/update-book", ctx -> {
                 var bookId = ctx.formParam("book");
-                var tag = ctx.formParam("tag");
-
-                if (bookId == null) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'book' query param");
-                    return;
-                } else if (tag == null) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Insertion missing 'tag' query param");
-                    return;
-                }
-
-                var returnUrl = ctx.formParam("return");
-                if (returnUrl != null && !returnUrl.startsWith("/")) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
-                    return;
-                }
-
-                db.addTag(Integer.parseInt(bookId), tag);
-
-                if (returnUrl != null) {
-                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
-                } else {
-                    ctx.status(HttpStatus.ACCEPTED).result("OK");
-                }
-            })
-            .post("/api/remove-tag", ctx -> {
-                var bookId = ctx.formParam("book");
-                var tag = ctx.formParam("tag");
-
-                if (bookId == null) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Deletion missing 'book' query param");
-                    return;
-                } else if (tag == null) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Deletion missing 'tag' query param");
-                    return;
-                }
-
-                var returnUrl = ctx.formParam("return");
-                if (returnUrl != null && !returnUrl.startsWith("/")) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
-                    return;
-                }
-
-                db.removeTag(Integer.parseInt(bookId), tag);
-
-                if (returnUrl != null) {
-                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
-                } else {
-                    ctx.status(HttpStatus.ACCEPTED).result("OK");
-                }
-            })
-            .post("/api/set-note", ctx -> {
-                var bookId = ctx.formParam("book");
+                var title = ctx.formParam("title");
+                var author = ctx.formParam("author");
+                var barcode = ctx.formParam("barcode");
+                var url = ctx.formParam("url");
+                var cover = Objects.requireNonNullElse(ctx.formParam("cover"), "0");
                 var note = ctx.formParam("note");
+                var tags = Lines.nonEmptyLines(ctx.formParam("tags"));
 
                 if (bookId == null) {
                     ctx.status(HttpStatus.BAD_REQUEST).result("Update missing 'book' query param");
                     return;
-                } else if (note == null) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Update missing 'note' query param");
-                    return;
                 }
 
-                var returnUrl = ctx.formParam("return");
-                if (returnUrl != null && !returnUrl.startsWith("/")) {
-                    ctx.status(HttpStatus.BAD_REQUEST).result("Malformed return URL");
-                    return;
+                int bookIdI = Integer.parseInt(bookId);
+                var book = new Book(bookIdI, title, author, url, barcode, Integer.parseInt(cover), note);
+                db.updateBook(bookIdI, book);
+
+                var existingTags = db.getTags(bookIdI);
+
+                // Add new tags
+                for (var tag : tags) {
+                    if (existingTags.contains(tag)) continue;
+                    db.addTag(bookIdI, tag);
                 }
 
-                db.updateNote(Integer.parseInt(bookId), note);
-
-                if (returnUrl != null) {
-                    ctx.redirect(returnUrl, HttpStatus.SEE_OTHER);
-                } else {
-                    ctx.status(HttpStatus.ACCEPTED).result("OK");
+                // Remove deleted tags
+                for (var tag : existingTags) {
+                    if (tags.contains(tag)) continue;
+                    db.removeTag(bookIdI, tag);
                 }
+
+                ctx.redirect("/book/" + bookId, HttpStatus.SEE_OTHER);
             })
             .get("/api/qr", ctx -> {
                 var code = ctx.queryParam("code");

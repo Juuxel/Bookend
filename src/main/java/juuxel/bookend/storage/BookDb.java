@@ -214,13 +214,18 @@ public final class BookDb implements AutoCloseable {
         return -1;
     }
 
-    public void updateNote(int bookId, String note) {
-        try (var statement = connection.prepareStatement("UPDATE Books SET note=? WHERE id=?")) {
-            statement.setString(1, note);
-            statement.setInt(2, bookId);
+    public void updateBook(int bookId, Book book) {
+        try (var statement = connection.prepareStatement("UPDATE Books SET title=?, author=?, barcode=?, url=?, cover=?, note=? WHERE id=?")) {
+            statement.setString(1, book.title());
+            statement.setString(2, book.author());
+            statement.setString(3, book.barcode());
+            statement.setString(4, book.url());
+            statement.setInt(5, book.cover());
+            statement.setString(6, book.note());
+            statement.setInt(7, bookId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.error("Could not update note of book {} to {}", bookId, note, e);
+            LOGGER.error("Could not update book {} to {}", bookId, book, e);
         }
     }
 

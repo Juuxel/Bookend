@@ -1,0 +1,41 @@
+{% extends "Base.peb.html" %}
+
+{% block content %}
+<form action="/api/update-book" method="POST">
+    <input type="text" name="book" style="display: none" required value="{{ book.id }}">
+    <table>
+        <tbody>
+            <tr>
+                <td><label for="title-input">Title</label></td>
+                <td><input type="text" name="title" id="title-input" required value="{{ book.title }}"></td>
+            </tr>
+            <tr>
+                <td><label for="author-input">Author</label></td>
+                <td><input type="text" name="author" id="author-input" value="{{ book.author }}"></td>
+            </tr>
+            <tr>
+                <td><label for="url-input">URL</label></td>
+                <td><input type="text" name="url" id="url-input" value="{{ book.url }}"></td>
+            </tr>
+            <tr>
+                <td><label for="barcode-input">Barcode</label></td>
+                <td><input type="text" name="barcode" id="barcode-input" value="{{ book.barcode }}"></td>
+            </tr>
+            <tr>
+                <td><label for="cover-input">Cover</label></td>
+                <td><input type="number" name="cover" id="cover-input" min="0" value="{{ book.cover }}"></td>
+            </tr>
+            <tr>
+                <td><label for="tags-input">Tags</label></td>
+                <td><textarea name="tags" id="tags-input" rows="5" cols="80">{% for tag in tags %}{{ tag }}
+{% endfor %}</textarea></td>
+            </tr>
+        <tr>
+            <td><label for="note-input">Note</label></td>
+            <td><textarea name="note" id="note-input" rows="5" cols="80">{{ book.note }}</textarea></td>
+        </tr>
+        </tbody>
+    </table>
+    <button>Save</button>
+</form>
+{% endblock %}
