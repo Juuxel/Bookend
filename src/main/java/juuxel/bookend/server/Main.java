@@ -296,6 +296,10 @@ public final class Main {
             })
             .get("/api/qr", ctx -> {
                 var code = ctx.queryParam("code");
+                if (code == null || code.isEmpty()) {
+                    ctx.status(HttpStatus.BAD_REQUEST);
+                    return;
+                }
                 var note = Objects.requireNonNullElse(ctx.queryParam("note"), "");
                 var image = QrGenerator.generateQrImage(code, note);
                 ctx.contentType(ContentType.IMAGE_PNG).result(image);
